@@ -7,10 +7,10 @@ const CSV_URLS = [
 ];
 
 // EmailJS Configuration
-const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // سيتم استبدالها بعد إعداد EmailJS
-const EMAILJS_TEMPLATE_ID_JOIN = 'YOUR_TEMPLATE_ID_JOIN'; // للانضمام كحرفي
-const EMAILJS_TEMPLATE_ID_MESSAGE = 'YOUR_TEMPLATE_ID_MESSAGE'; // للرسائل
-const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+const EMAILJS_SERVICE_ID = 'service_wag0v7p';
+const EMAILJS_TEMPLATE_ID_JOIN = 'template_xzdwg9r'; // للانضمام كحرفي
+const EMAILJS_TEMPLATE_ID_MESSAGE = 'template_lf7ra85'; // للرسائل
+const EMAILJS_PUBLIC_KEY = 'RvpF6n_--jwyOoydO';
 const ADMIN_EMAIL = 'mahmod24yt@gmail.com';
 
 // Cache settings (1 minute = 60000 milliseconds)
@@ -678,7 +678,7 @@ function copyToClipboard(text) {
 }
 
 // Handle join form submit
-function handleJoinFormSubmit(e) {
+async function handleJoinFormSubmit(e) {
     e.preventDefault();
     
     const formData = {
@@ -691,29 +691,56 @@ function handleJoinFormSubmit(e) {
         description: document.getElementById('craftsmanDescription').value
     };
     
-    // Here you would typically send this to a server
-    // For now, we'll just show a success message
-    console.log('Form data:', formData);
+    // Show loading state
+    const submitBtn = joinForm.querySelector('.submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
     
-    // Create WhatsApp message
-    const whatsappMessage = `مرحباً، أريد الانضمام كحرفي:\n\n` +
-        `الاسم: ${formData.name}\n` +
-        `الهاتف: ${formData.phone}\n` +
-        `المهنة: ${formData.profession}\n` +
-        `الموقع: ${formData.location}\n` +
-        (formData.whatsapp ? `الواتساب: ${formData.whatsapp}\n` : '') +
-        (formData.email ? `البريد: ${formData.email}\n` : '') +
-        (formData.description ? `الوصف: ${formData.description}` : '');
-    
-    // You can replace this with your WhatsApp number
-    const adminWhatsapp = '201234567890'; // Replace with actual admin WhatsApp number
-    const whatsappUrl = `https://wa.me/${adminWhatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
-    
-    window.open(whatsappUrl, '_blank');
-    
-    alert('شكراً لك! سيتم التواصل معك قريباً.');
-    joinForm.reset();
-    joinModal.style.display = 'none';
+    try {
+        // Send email using EmailJS
+        if (typeof emailjs !== 'undefined') {
+            await emailjs.send(
+                EMAILJS_SERVICE_ID,
+                EMAILJS_TEMPLATE_ID_JOIN,
+                {
+                    to_email: ADMIN_EMAIL,
+                    from_name: formData.name,
+                    from_phone: formData.phone,
+                    profession: formData.profession,
+                    location: formData.location,
+                    whatsapp: formData.whatsapp || 'غير متوفر',
+                    email: formData.email || 'غير متوفر',
+                    description: formData.description || 'لا يوجد وصف',
+                    message: `طلب انضمام جديد كحرفي:\n\nالاسم: ${formData.name}\nالهاتف: ${formData.phone}\nالمهنة: ${formData.profession}\nالموقع: ${formData.location}\nالواتساب: ${formData.whatsapp || 'غير متوفر'}\nالبريد: ${formData.email || 'غير متوفر'}\nالوصف: ${formData.description || 'لا يوجد وصف'}`
+                }
+            );
+        } else {
+            // Fallback: Send email using mailto link
+            const emailSubject = encodeURIComponent('طلب انضمام جديد كحرفي');
+            const emailBody = encodeURIComponent(
+                `طلب انضمام جديد كحرفي:\n\n` +
+                `الاسم: ${formData.name}\n` +
+                `الهاتف: ${formData.phone}\n` +
+                `المهنة: ${formData.profession}\n` +
+                `الموقع: ${formData.location}\n` +
+                `الواتساب: ${formData.whatsapp || 'غير متوفر'}\n` +
+                `البريد: ${formData.email || 'غير متوفر'}\n` +
+                `الوصف: ${formData.description || 'لا يوجد وصف'}`
+            );
+            window.location.href = `mailto:${ADMIN_EMAIL}?subject=${emailSubject}&body=${emailBody}`;
+        }
+        
+        alert('شكراً لك! تم إرسال طلبك بنجاح. سيتم التواصل معك قريباً.');
+        joinForm.reset();
+        joinModal.style.display = 'none';
+    } catch (error) {
+        console.error('Error sending email:', error);
+        alert('حدث خطأ أثناء إرسال الطلب. يرجى المحاولة مرة أخرى أو التواصل معنا مباشرة.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
 }
 
 // Handle message form submit
@@ -735,7 +762,7 @@ async function handleMessageFormSubmit(e) {
     
     try {
         // Send email using EmailJS
-        if (typeof emailjs !== 'undefined' && EMAILJS_SERVICE_ID !== 'YOUR_SERVICE_ID') {
+        if (typeof emailjs !== 'undefined') {
             await emailjs.send(
                 EMAILJS_SERVICE_ID,
                 EMAILJS_TEMPLATE_ID_MESSAGE,
