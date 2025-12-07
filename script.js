@@ -704,15 +704,20 @@ async function handleJoinFormSubmit(e) {
                 EMAILJS_SERVICE_ID,
                 EMAILJS_TEMPLATE_ID_JOIN,
                 {
-                    to_email: ADMIN_EMAIL,
-                    from_name: formData.name,
-                    from_phone: formData.phone,
+                    name: formData.name,
+                    phone: formData.phone,
                     profession: formData.profession,
                     location: formData.location,
                     whatsapp: formData.whatsapp || 'غير متوفر',
                     email: formData.email || 'غير متوفر',
                     description: formData.description || 'لا يوجد وصف',
-                    message: `طلب انضمام جديد كحرفي:\n\nالاسم: ${formData.name}\nالهاتف: ${formData.phone}\nالمهنة: ${formData.profession}\nالموقع: ${formData.location}\nالواتساب: ${formData.whatsapp || 'غير متوفر'}\nالبريد: ${formData.email || 'غير متوفر'}\nالوصف: ${formData.description || 'لا يوجد وصف'}`
+                    time: new Date().toLocaleString('ar-EG', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    })
                 }
             );
         } else {
@@ -767,12 +772,17 @@ async function handleMessageFormSubmit(e) {
                 EMAILJS_SERVICE_ID,
                 EMAILJS_TEMPLATE_ID_MESSAGE,
                 {
-                    to_email: ADMIN_EMAIL,
-                    from_name: formData.name,
-                    from_phone: formData.phone,
-                    from_email: formData.email || 'غير متوفر',
+                    name: formData.name,
+                    phone: formData.phone,
+                    email: formData.email || 'غير متوفر',
                     message: formData.message,
-                    subject: 'رسالة جديدة من موقع الحرفيين'
+                    time: new Date().toLocaleString('ar-EG', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric', 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                    })
                 }
             );
         } else {
