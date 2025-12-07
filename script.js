@@ -6,6 +6,13 @@ const CSV_URLS = [
     `https://docs.google.com/spreadsheets/d/e/${SHEET_ID}/export?format=csv&gid=0`
 ];
 
+// EmailJS Configuration
+const EMAILJS_SERVICE_ID = 'YOUR_SERVICE_ID'; // سيتم استبدالها بعد إعداد EmailJS
+const EMAILJS_TEMPLATE_ID_JOIN = 'YOUR_TEMPLATE_ID_JOIN'; // للانضمام كحرفي
+const EMAILJS_TEMPLATE_ID_MESSAGE = 'YOUR_TEMPLATE_ID_MESSAGE'; // للرسائل
+const EMAILJS_PUBLIC_KEY = 'YOUR_PUBLIC_KEY';
+const ADMIN_EMAIL = 'mahmod24yt@gmail.com';
+
 // Cache settings (1 minute = 60000 milliseconds)
 const CACHE_DURATION = 60000;
 const CACHE_KEY = 'craftsmen_data_cache';
@@ -39,6 +46,11 @@ const messageForm = document.getElementById('messageForm');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize EmailJS
+    if (typeof emailjs !== 'undefined') {
+        emailjs.init(EMAILJS_PUBLIC_KEY);
+    }
+    
     loadData();
     setupEventListeners();
     setupModals();
@@ -705,7 +717,7 @@ function handleJoinFormSubmit(e) {
 }
 
 // Handle message form submit
-function handleMessageFormSubmit(e) {
+async function handleMessageFormSubmit(e) {
     e.preventDefault();
     
     const formData = {
@@ -715,25 +727,49 @@ function handleMessageFormSubmit(e) {
         message: document.getElementById('messageText').value
     };
     
-    // Here you would typically send this to a server
-    // For now, we'll just show a success message
-    console.log('Message data:', formData);
+    // Show loading state
+    const submitBtn = messageForm.querySelector('.submit-btn');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
     
-    // Create WhatsApp message
-    const whatsappMessage = `رسالة جديدة:\n\n` +
-        `الاسم: ${formData.name}\n` +
-        `رقم التلفون: ${formData.phone}\n` +
-        (formData.email ? `البريد الإلكتروني: ${formData.email}\n\n` : '\n') +
-        `الرسالة:\n${formData.message}`;
-    
-    // You can replace this with your WhatsApp number
-    const adminWhatsapp = '201234567890'; // Replace with actual admin WhatsApp number
-    const whatsappUrl = `https://wa.me/${adminWhatsapp}?text=${encodeURIComponent(whatsappMessage)}`;
-    
-    window.open(whatsappUrl, '_blank');
-    
-    alert('شكراً لك! تم إرسال رسالتك.');
-    messageForm.reset();
-    messageModal.style.display = 'none';
+    try {
+        // Send email using EmailJS
+        if (typeof emailjs !== 'undefined' && EMAILJS_SERVICE_ID !== 'YOUR_SERVICE_ID') {
+            await emailjs.send(
+                EMAILJS_SERVICE_ID,
+                EMAILJS_TEMPLATE_ID_MESSAGE,
+                {
+                    to_email: ADMIN_EMAIL,
+                    from_name: formData.name,
+                    from_phone: formData.phone,
+                    from_email: formData.email || 'غير متوفر',
+                    message: formData.message,
+                    subject: 'رسالة جديدة من موقع الحرفيين'
+                }
+            );
+        } else {
+            // Fallback: Send email using mailto link
+            const emailSubject = encodeURIComponent('رسالة جديدة من موقع الحرفيين');
+            const emailBody = encodeURIComponent(
+                `رسالة جديدة:\n\n` +
+                `الاسم: ${formData.name}\n` +
+                `رقم التلفون: ${formData.phone}\n` +
+                `البريد الإلكتروني: ${formData.email || 'غير متوفر'}\n\n` +
+                `الرسالة:\n${formData.message}`
+            );
+            window.location.href = `mailto:${ADMIN_EMAIL}?subject=${emailSubject}&body=${emailBody}`;
+        }
+        
+        alert('شكراً لك! تم إرسال رسالتك بنجاح.');
+        messageForm.reset();
+        messageModal.style.display = 'none';
+    } catch (error) {
+        console.error('Error sending email:', error);
+        alert('حدث خطأ أثناء إرسال الرسالة. يرجى المحاولة مرة أخرى أو التواصل معنا مباشرة.');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
 }
 
