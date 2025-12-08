@@ -473,7 +473,7 @@ function createResultCard(row, searchTerm = '') {
     let contactButtons = '';
     if (whatsapp) {
         const whatsappNumber = cleanPhoneNumber(whatsapp);
-        contactButtons += `<a href="https://wa.me/${whatsappNumber}" target="_blank" class="contact-btn whatsapp">
+        contactButtons += `<a href="https://wa.me/${whatsappNumber}" target="_blank" rel="noopener noreferrer" class="contact-btn whatsapp">
             <i class="fab fa-whatsapp"></i> واتساب
         </a>`;
     }
